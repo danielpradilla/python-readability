@@ -1,0 +1,119 @@
+
+TODO:
+Reasoning behind the analysis 
+Organ symbol table 
+Reasoning of length independence 
+Change in reading difficulty year over year
+Evolution in reading difficulty
+
+Fine tune S/2005/569, S/2013/599
+Fine tune S/PRST/2004/15
+
+
+Compare with Europarl
+D3 viz
+
+
+Ultimate goal is to produce an algorithm that can assess difficulty and prescribe actions. Send to contractual for low priority documents. 
+Technical and non-technical version of the post
+Marriage of predictive and prescriptive analytics for nlp
+
+* d3 viz generator
+* clean the data, narrow the dataset
+* UN Secretariat or UN? Wikipedia
+
+* story about data cleanup. Extraction of symbol and dates.
+
+https://beta.observablehq.com/@mbostock/d3-box-plot
+
+Charts
+* How did I pick Dale Chall
+* Dot boxplot per organ
+* Evolution per organ
+
+
+
+
+30/09/18
+Corpus Corpora
+
+
+https://conferences.unite.un.org/UNCorpus/en/DownloadOverview
+
+We could measure time to translate the document and we could infer the difficulty of the document based on that measurement. However, it is also true that the time to translate responds to other factors like the different levels of prioritization of documents, unexpected delays and interruptions and even holidays. 
+Also, we would expect that longer documents would be harder to translate, the translator would need to hold her concentration on the background of the text for longer periods of time. However, short highly technical documents might be as or more difficult to translate than long report-like documents, filled with tables.
+
+One of the aspects that I like about the readability scoring is that is length-agnostic. Readability scoring is based on the percentage of "complicated" multi-syllable words used in the text. 
+
+What I wish to achieve is to find out if there is some sort of correlation between the UN Organ and the difficulty of its related texts. Are Human Rights documents easier to read than Conference of Disarmament ones? 
+
+I would also like to find out if documents from certain organs are easier to translate than others. Difficulty of translation can be correlated time to translate and price per word. So, if one were to know in advance which upcoming documents would be harder to translate, one could properly assign the more experienced translators to them and also consider the possibility of more time-consuming revision work.
+
+Arguably, better translators could produce easier to read texts. So, readers of this analysis will also need to take that into consideration.
+
+
+Organ information can be extracted from the symbol of the document. The symbol is UN standard for uniquely identifying each document.
+
+
+Change in difficulty year-over-year
+
+
+
+Is it safe to assume than easier to read texts are produced from easier to translate documents? Possibly
+
+
+06/10/2018
+all readability formulae were developed for English, so the scales of the outcomes are only meaningful for English texts
+
+
+Choosing readability formula
+The python library that I found offers formulas for the following
+- Flesch-Kincaid
+- Coleman-Liau
+- Dale-Chall
+-Linsear Write
+- SMOG
+- Automated Readability Index
+- Flesch Reading Ease 
+
+I dived into the readability wikipedia page. What else?
+https://en.wikipedia.org/wiki/Readability
+
+The majority of the formulas seem fine-tuned to measure reading comprehension for education.
+
+Flesch-Kinkaid is an upgrade of the Flesch Reading Ease and it correlates 0.91 with comprehension
+Coleman-Liau: counts the number of characters instead of the number of words
+Dale-Chall formula needs a list of 3000 "easy" words. It correlates 0.93 with comprehension and seems to be the most widely-used in scientific research.
+I got the list from http://countwordsworth.com/blog/dale-chall-easy-word-list-text-file/
+Linsear Write assigns an arbitrary value to "hard" and "easy" word. I figured that if we were to go down that path, we might as well rely on Dale-Chall
+SMOG is mostly used in healthcare, so I discarded it.
+Automated readability test: counts the number of characters instead of the number of words
+
+
+Readability library
+I found python readability
+Evaluated several formulae and created a single list of results
+
+
+13/10/2018
+Parsing the text
+XML
+Parser
+
+
+
+
+Eliminating the outliers
+I noticed that there were some documents which were reporting a minimum age of 700 years for Flesch-Kinkaid. And as boring or technical as some of these documents might be, I doubt they would require a lawyer from the middle ages to understand.
+
+I was parsing the sentence tag and most of the sentences had periods at the end. What I didn't realize was that the lack of space after the period was messing with the nltk sentence parser. I also found that many list do not have a period at the end and they were parsed as a single long-winded sentence. I ended up testing for punctuation at the end of sentences and adding a period when I couldn't find any punctuation.
+
+
+I used multiprocessing for speeding-up the parsing
+
+27/10/2018
+Looking at the Fletsch Kincaid results, I really don't think that you should be a 100-year old person to be able to understand a document, technical or boring as it may be. So, maybe there was some problem with the data itself. And lo and behold: I found that if a paragraph ended in coma or semi-colon, it was interpreted as a single paragraph by the scoring algorithm. The scoring algorithm needs periods in order to know where the sentence ends. This resulted in very long, seemly-rambling paragraph that threw off the scoring. The problem was particularly acute in documents which contained long enumerations, like A/RES/56/173 https://docs.google.com/viewer?url=http%3A%2F%2Fwww.refworld.org%2Fpdfid%2F3da44affe.pdf. Note that many paragraphs end in a comma:
+
+
+
+

@@ -1,0 +1,7 @@
+files
+readability-score
+*results*.csv
+*.png
+*example*
+.ipynb_checkpoints
+*.graffle
